@@ -11,10 +11,10 @@ indent =
 convertBinOp : Ast.BinOp -> String
 convertBinOp op =
     case op of
-        Ast.Plus ->
+        Ast.Add ->
             "(i32.add)"
 
-        Ast.Multi ->
+        Ast.Mul ->
             "(i32.mul)"
 
 

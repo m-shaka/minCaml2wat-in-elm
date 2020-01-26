@@ -7,5 +7,5 @@ type Expr
 
 
 type BinOp
-    = Plus
-    | Multi
+    = Add
+    | Mul

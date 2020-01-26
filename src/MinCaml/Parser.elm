@@ -26,36 +26,35 @@ factor =
 
 multiplicative : Parser Ast.Expr
 multiplicative =
-    succeed identity
-        |= lazy (\_ -> factor)
-        |. spaces
-        |> andThen
-            (\e ->
-                oneOf
-                    [ succeed (Ast.BinOp Ast.Multi e)
-                        |. symbol "*"
-                        |. spaces
-                        |= lazy (\_ -> factor)
-                    , succeed e
-                    ]
-            )
+    oneOf [ map (always Ast.Mul) <| symbol "*" ]
+        |> chainl factor
 
 
 additive : Parser Ast.Expr
 additive =
+    oneOf [ map (always Ast.Add) <| symbol "+" ]
+        |> chainl multiplicative
+
+
+{-| clone of Text.Parsec.Combinator.chainl1
+-}
+chainl : Parser Ast.Expr -> Parser Ast.BinOp -> Parser Ast.Expr
+chainl baseParser opParser =
+    let
+        rest e =
+            oneOf
+                [ succeed (\op e_ -> Ast.BinOp op e e_)
+                    |= opParser
+                    |. spaces
+                    |= lazy (\_ -> baseParser)
+                    |> andThen rest
+                , succeed e
+                ]
+    in
     succeed identity
-        |= lazy (\_ -> multiplicative)
+        |= lazy (\_ -> baseParser)
         |. spaces
-        |> andThen
-            (\e ->
-                oneOf
-                    [ succeed (Ast.BinOp Ast.Plus e)
-                        |. symbol "+"
-                        |. spaces
-                        |= lazy (\_ -> multiplicative)
-                    , succeed e
-                    ]
-            )
+        |> andThen rest
 
 
 expr : Parser Ast.Expr
