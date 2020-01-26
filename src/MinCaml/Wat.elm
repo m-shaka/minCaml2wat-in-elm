@@ -14,8 +14,14 @@ convertBinOp op =
         Ast.Add ->
             "(i32.add)"
 
+        Ast.Sub ->
+            "(i32.sub)"
+
         Ast.Mul ->
             "(i32.mul)"
+
+        Ast.Div ->
+            "(i32.div_s)"
 
 
 convertExpr : Ast.Expr -> String

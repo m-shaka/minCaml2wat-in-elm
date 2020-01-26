@@ -26,13 +26,19 @@ factor =
 
 multiplicative : Parser Ast.Expr
 multiplicative =
-    oneOf [ map (always Ast.Mul) <| symbol "*" ]
+    oneOf
+        [ map (always Ast.Mul) <| symbol "*"
+        , map (always Ast.Div) <| symbol "/"
+        ]
         |> chainl factor
 
 
 additive : Parser Ast.Expr
 additive =
-    oneOf [ map (always Ast.Add) <| symbol "+" ]
+    oneOf
+        [ map (always Ast.Add) <| symbol "+"
+        , map (always Ast.Sub) <| symbol "-"
+        ]
         |> chainl multiplicative
 
 
@@ -46,13 +52,14 @@ chainl baseParser opParser =
                 [ succeed (\op e_ -> Ast.BinOp op e e_)
                     |= opParser
                     |. spaces
-                    |= lazy (\_ -> baseParser)
+                    |= baseParser
+                    |. spaces
                     |> andThen rest
                 , succeed e
                 ]
     in
     succeed identity
-        |= lazy (\_ -> baseParser)
+        |= baseParser
         |. spaces
         |> andThen rest
 

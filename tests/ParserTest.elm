@@ -9,7 +9,7 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "parser test"
-        [ test "assoc" <|
+        [ test "add assoc" <|
             \_ ->
                 let
                     src =
@@ -20,6 +20,28 @@ suite =
                             Ast.Add
                             (Ast.BinOp
                                 Ast.Add
+                                (Ast.Int 5)
+                                (Ast.Int 3)
+                            )
+                            (Ast.Int 2)
+                in
+                case parse src of
+                    Ok ast ->
+                        Expect.equal expected ast
+
+                    Err e ->
+                        Expect.fail e
+        , test "mul assoc" <|
+            \_ ->
+                let
+                    src =
+                        "5 * 3 * 2"
+
+                    expected =
+                        Ast.BinOp
+                            Ast.Mul
+                            (Ast.BinOp
+                                Ast.Mul
                                 (Ast.Int 5)
                                 (Ast.Int 3)
                             )

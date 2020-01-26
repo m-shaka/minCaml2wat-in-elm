@@ -8,4 +8,6 @@ type Expr
 
 type BinOp
     = Add
+    | Sub
     | Mul
+    | Div
