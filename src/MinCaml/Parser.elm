@@ -42,7 +42,7 @@ additive =
         |> chainl multiplicative
 
 
-{-| clone of Text.Parsec.Combinator.chainl1
+{-| clone of <https://hackage.haskell.org/package/parsec3-1.0.1.8/docs/src/Text-Parsec-Combinator.html#chainl1>
 -}
 chainl : Parser Ast.Expr -> Parser Ast.BinOp -> Parser Ast.Expr
 chainl baseParser opParser =
