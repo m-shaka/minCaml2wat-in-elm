@@ -1,6 +1,8 @@
 module MinCaml.Wat exposing (convert, convertExpr)
 
 import MinCaml.Ast as Ast
+import MinCaml.Typing as Typing
+import String.Format as Format
 
 
 indent : String
@@ -38,16 +40,17 @@ convertExpr expr =
                 ]
 
 
-convert : Ast.Expr -> String
-convert expr =
+convert : Typing.TExpr -> String
+convert (Typing.TExpr type_ expr) =
     let
-        base =
-            """(module
-    (export "exported_main" (func $main))
-    (func $main (result i32)
-        """
-
         watExpr =
             convertExpr expr
     in
-    base ++ watExpr ++ "))"
+    """(module
+    (export "exported_main" (func $main))
+    (func $main (result {{ resultType }})
+        {{ body }}
+    )
+)"""
+        |> Format.namedValue "resultType" (Typing.show type_)
+        |> Format.namedValue "body" watExpr

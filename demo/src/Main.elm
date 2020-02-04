@@ -6,6 +6,7 @@ import Html.Attributes exposing (style, type_, value)
 import Html.Events exposing (onInput, onSubmit)
 import Maybe
 import MinCaml.Parser exposing (parse)
+import MinCaml.Typing exposing (addType)
 import MinCaml.Wat as Wat
 import Port
 
@@ -36,7 +37,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SendWat ->
-            case parse model.srcCode of
+            case parse model.srcCode |> Result.andThen addType of
                 Ok expr ->
                     let
                         wat =
