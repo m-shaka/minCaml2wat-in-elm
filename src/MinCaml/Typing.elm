@@ -9,6 +9,7 @@ type TExpr
 
 type Type
     = TInt
+    | TFloat
     | TUnit
 
 
@@ -23,30 +24,38 @@ unify t1 t2 =
 
 inferExpr : Ast.Expr -> Result String Type
 inferExpr expr =
+    let
+        unifyOperand type_ e =
+            inferExpr e |> Result.andThen (unify type_)
+
+        inferBinOp type_ e1 e2 =
+            case ( unifyOperand type_ e1, unifyOperand type_ e2 ) of
+                ( Err e, _ ) ->
+                    Err e
+
+                ( _, Err e ) ->
+                    Err e
+
+                _ ->
+                    Ok type_
+    in
     case expr of
         Ast.Int _ ->
             Ok TInt
 
-        Ast.BinOp _ e1 e2 ->
+        Ast.Float _ ->
+            Ok TFloat
+
+        Ast.BinOp op e1 e2 ->
             let
-                unifyOperand e =
-                    inferExpr e |> Result.andThen (unify TInt)
+                expected =
+                    if Ast.isIntOp op then
+                        TInt
 
-                r1 =
-                    unifyOperand e1
-
-                r2 =
-                    unifyOperand e2
+                    else
+                        TFloat
             in
-            case ( r1, r2 ) of
-                ( Err _, _ ) ->
-                    r1
-
-                ( _, Err _ ) ->
-                    r2
-
-                _ ->
-                    Ok TInt
+            inferBinOp expected e1 e2
 
 
 addType : Ast.Expr -> Result String TExpr
@@ -59,6 +68,9 @@ show t =
     case t of
         TInt ->
             "i32"
+
+        TFloat ->
+            "f32"
 
         TUnit ->
             "()"

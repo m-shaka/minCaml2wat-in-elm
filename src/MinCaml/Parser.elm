@@ -5,9 +5,21 @@ import Parser exposing (..)
 import Result
 
 
-int_ : Parser Ast.Expr
-int_ =
-    succeed Ast.Int |= int
+number_ : Parser Ast.Expr
+number_ =
+    number
+        { int = Just Ast.Int
+        , binary = Nothing
+        , octal = Nothing
+        , hex = Nothing
+        , float = Just Ast.Float
+        }
+
+
+base : Parser Ast.Expr
+base =
+    oneOf
+        [ number_ ]
 
 
 factor : Parser Ast.Expr
@@ -20,15 +32,15 @@ factor =
             |. spaces
             |. symbol ")"
         , succeed identity
-            |= int_
+            |= base
         ]
 
 
 multiplicative : Parser Ast.Expr
 multiplicative =
     oneOf
-        [ map (always Ast.Mul) <| symbol "*"
-        , map (always Ast.Div) <| symbol "/"
+        [ dotOp "*" Ast.Mul Ast.MulDot
+        , dotOp "/" Ast.Div Ast.DivDot
         ]
         |> chainl factor
 
@@ -36,8 +48,8 @@ multiplicative =
 additive : Parser Ast.Expr
 additive =
     oneOf
-        [ map (always Ast.Add) <| symbol "+"
-        , map (always Ast.Sub) <| symbol "-"
+        [ dotOp "+" Ast.Add Ast.AddDot
+        , dotOp "-" Ast.Sub Ast.SubDot
         ]
         |> chainl multiplicative
 
@@ -62,6 +74,20 @@ chainl baseParser opParser =
         |= baseParser
         |. spaces
         |> andThen rest
+
+
+dotOp : String -> Ast.BinOp -> Ast.BinOp -> Parser Ast.BinOp
+dotOp s op dotOp_ =
+    succeed identity
+        |. symbol s
+        |> andThen
+            (\_ ->
+                oneOf
+                    [ succeed dotOp_
+                        |. symbol "."
+                    , succeed op
+                    ]
+            )
 
 
 expr : Parser Ast.Expr

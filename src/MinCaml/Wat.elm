@@ -25,12 +25,27 @@ convertBinOp op =
         Ast.Div ->
             "(i32.div_s)"
 
+        Ast.AddDot ->
+            "(f32.add)"
+
+        Ast.SubDot ->
+            "(f32.sub)"
+
+        Ast.MulDot ->
+            "(f32.mul)"
+
+        Ast.DivDot ->
+            "(f32.div)"
+
 
 convertExpr : Ast.Expr -> String
 convertExpr expr =
     case expr of
         Ast.Int i ->
             "(i32.const " ++ String.fromInt i ++ ")"
+
+        Ast.Float f ->
+            "(f32.const " ++ String.fromFloat f ++ ")"
 
         Ast.BinOp op x y ->
             String.join ("\n" ++ indent)
