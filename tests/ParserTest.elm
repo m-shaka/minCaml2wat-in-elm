@@ -9,6 +9,16 @@ import Test exposing (..)
 suite : Test
 suite =
     describe "parser test"
+        [ testBinOp
+        , testBinOpDot
+        , testVar
+        , testLetIn
+        ]
+
+
+testBinOp : Test
+testBinOp =
+    describe "binOp"
         [ test "add assoc" <|
             \_ ->
                 let
@@ -25,12 +35,7 @@ suite =
                             )
                             (Ast.Int 2)
                 in
-                case parse src of
-                    Ok ast ->
-                        Expect.equal expected ast
-
-                    Err e ->
-                        Expect.fail e
+                Expect.equal (Ok expected) (parse src)
         , test "mul assoc" <|
             \_ ->
                 let
@@ -47,14 +52,89 @@ suite =
                             )
                             (Ast.Int 2)
                 in
-                case parse src of
-                    Ok ast ->
-                        Expect.equal expected ast
+                Expect.equal (Ok expected) (parse src)
+        , test "both (additive first)" <|
+            \_ ->
+                let
+                    src =
+                        "5 + 3 * 2 / 2"
 
-                    Err e ->
-                        Expect.fail e
-        , testVar
-        , testLetIn
+                    expected =
+                        Ast.BinOp
+                            Ast.Add
+                            (Ast.Int 5)
+                            (Ast.BinOp
+                                Ast.Div
+                                (Ast.BinOp
+                                    Ast.Mul
+                                    (Ast.Int 3)
+                                    (Ast.Int 2)
+                                )
+                                (Ast.Int 2)
+                            )
+                in
+                Expect.equal (Ok expected) (parse src)
+        , test "both (multiplicative first)" <|
+            \_ ->
+                let
+                    src =
+                        "5 * 3 + 2"
+
+                    expected =
+                        Ast.BinOp
+                            Ast.Add
+                            (Ast.BinOp
+                                Ast.Mul
+                                (Ast.Int 5)
+                                (Ast.Int 3)
+                            )
+                            (Ast.Int 2)
+                in
+                Expect.equal (Ok expected) (parse src)
+        ]
+
+
+testBinOpDot : Test
+testBinOpDot =
+    describe "binOp dot"
+        [ test "both (additive first)" <|
+            \_ ->
+                let
+                    src =
+                        "5. +. 3. *. 2. /. 2."
+
+                    expected =
+                        Ast.BinOp
+                            Ast.AddDot
+                            (Ast.Float 5.0)
+                            (Ast.BinOp
+                                Ast.DivDot
+                                (Ast.BinOp
+                                    Ast.MulDot
+                                    (Ast.Float 3.0)
+                                    (Ast.Float 2.0)
+                                )
+                                (Ast.Float 2.0)
+                            )
+                in
+                Expect.equal (Ok expected) (parse src)
+        , test "both (multiplicative first)" <|
+            \_ ->
+                let
+                    src =
+                        "5. *. 3. +. 2."
+
+                    expected =
+                        Ast.BinOp
+                            Ast.AddDot
+                            (Ast.BinOp
+                                Ast.MulDot
+                                (Ast.Float 5.0)
+                                (Ast.Float 3.0)
+                            )
+                            (Ast.Float 2.0)
+                in
+                Expect.equal (Ok expected) (parse src)
         ]
 
 
@@ -121,11 +201,11 @@ testLetIn =
             \_ ->
                 let
                     src =
-                        "let a = 3 + b in a"
+                        "let a = 3.1 +. b in a"
 
                     expected =
                         Ast.LetIn "a"
-                            (Ast.BinOp Ast.Add (Ast.Int 3) (Ast.Var "b"))
+                            (Ast.BinOp Ast.AddDot (Ast.Float 3.1) (Ast.Var "b"))
                             (Ast.Var "a")
                 in
                 Expect.equal (Ok expected) (parse src)
