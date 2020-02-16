@@ -54,6 +54,7 @@ suite =
                     Err e ->
                         Expect.fail e
         , testVar
+        , testLetIn
         ]
 
 
@@ -83,6 +84,49 @@ testVar =
 
                     expected =
                         Ast.BinOp Ast.Add (Ast.Var "a") (Ast.Var "b")
+                in
+                Expect.equal (Ok expected) (parse src)
+        ]
+
+
+testLetIn : Test
+testLetIn =
+    describe "let ... in"
+        [ test "simple" <|
+            \_ ->
+                let
+                    src =
+                        "let a = 3 in a"
+
+                    expected =
+                        Ast.LetIn "a" (Ast.Int 3) (Ast.Var "a")
+                in
+                Expect.equal (Ok expected) (parse src)
+        , test "nested" <|
+            \_ ->
+                let
+                    src =
+                        "let a = 3 in let b = 5 in a + b"
+
+                    expected =
+                        Ast.LetIn "a"
+                            (Ast.Int 3)
+                            (Ast.LetIn "b"
+                                (Ast.Int 5)
+                                (Ast.BinOp Ast.Add (Ast.Var "a") (Ast.Var "b"))
+                            )
+                in
+                Expect.equal (Ok expected) (parse src)
+        , test "complex exp" <|
+            \_ ->
+                let
+                    src =
+                        "let a = 3 + b in a"
+
+                    expected =
+                        Ast.LetIn "a"
+                            (Ast.BinOp Ast.Add (Ast.Int 3) (Ast.Var "b"))
+                            (Ast.Var "a")
                 in
                 Expect.equal (Ok expected) (parse src)
         ]

@@ -18,20 +18,35 @@ number_ =
         }
 
 
-var : Parser Ast.Expr
+var : Parser String
 var =
     variable
         { start = \c -> Char.isLower c || c == '_'
         , inner = \c -> Char.isAlphaNum c || c == '_' || c == '\''
-        , reserved = Set.fromList []
+        , reserved = Set.fromList [ "let", "in" ]
         }
-        |> map Ast.Var
+
+
+letIn : Parser Ast.Expr
+letIn =
+    succeed Ast.LetIn
+        |. keyword "let"
+        |. spaces
+        |= var
+        |. spaces
+        |. symbol "="
+        |. spaces
+        |= lazy (\_ -> additive)
+        |. spaces
+        |. keyword "in"
+        |. spaces
+        |= lazy (\_ -> additive)
 
 
 base : Parser Ast.Expr
 base =
     oneOf
-        [ number_, var ]
+        [ number_, map Ast.Var var, letIn ]
 
 
 factor : Parser Ast.Expr
