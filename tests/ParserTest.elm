@@ -53,4 +53,36 @@ suite =
 
                     Err e ->
                         Expect.fail e
+        , testVar
+        ]
+
+
+testVar : Test
+testVar =
+    describe "Var"
+        [ test "simple alpha" <|
+            \_ ->
+                Expect.equal (Ok (Ast.Var "a")) (parse "a")
+        , test "start from _" <|
+            \_ ->
+                Expect.equal (Ok (Ast.Var "_a")) (parse "_a")
+        , test "contains number" <|
+            \_ ->
+                Expect.equal (Ok (Ast.Var "_1a3b")) (parse "_1a3b")
+        , test "contains '" <|
+            \_ ->
+                Expect.equal (Ok (Ast.Var "_a'")) (parse "_a'")
+        , test "start from capital" <|
+            \_ ->
+                Expect.err (parse "Abc")
+        , test "apply binOp to var" <|
+            \_ ->
+                let
+                    src =
+                        "a + b"
+
+                    expected =
+                        Ast.BinOp Ast.Add (Ast.Var "a") (Ast.Var "b")
+                in
+                Expect.equal (Ok expected) (parse src)
         ]

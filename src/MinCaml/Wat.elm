@@ -54,6 +54,9 @@ convertExpr expr =
                 , convertBinOp op
                 ]
 
+        _ ->
+            ""
+
 
 convert : Typing.TExpr -> String
 convert (Typing.TExpr type_ expr) =

@@ -5,6 +5,8 @@ type Expr
     = Int Int
     | Float Float
     | BinOp BinOp Expr Expr
+    | Var String
+    | LetIn String Expr Expr
 
 
 type BinOp

@@ -57,6 +57,12 @@ inferExpr expr =
             in
             inferBinOp expected e1 e2
 
+        Ast.Var _ ->
+            Ok TUnit
+
+        Ast.LetIn _ _ _ ->
+            Ok TUnit
+
 
 addType : Ast.Expr -> Result String TExpr
 addType expr =

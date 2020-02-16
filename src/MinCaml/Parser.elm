@@ -1,8 +1,10 @@
 module MinCaml.Parser exposing (parse)
 
+import Char
 import MinCaml.Ast as Ast
 import Parser exposing (..)
 import Result
+import Set
 
 
 number_ : Parser Ast.Expr
@@ -16,10 +18,20 @@ number_ =
         }
 
 
+var : Parser Ast.Expr
+var =
+    variable
+        { start = \c -> Char.isLower c || c == '_'
+        , inner = \c -> Char.isAlphaNum c || c == '_' || c == '\''
+        , reserved = Set.fromList []
+        }
+        |> map Ast.Var
+
+
 base : Parser Ast.Expr
 base =
     oneOf
-        [ number_ ]
+        [ number_, var ]
 
 
 factor : Parser Ast.Expr
