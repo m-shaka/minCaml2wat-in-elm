@@ -5,11 +5,6 @@ import MinCaml.Typing as Typing
 import String.Format as Format
 
 
-indent : String
-indent =
-    String.repeat 8 " "
-
-
 convertBinOp : Ast.BinOp -> String
 convertBinOp op =
     case op of
@@ -38,8 +33,12 @@ convertBinOp op =
             "(f32.div)"
 
 
-convertExpr : Ast.Expr -> String
-convertExpr expr =
+convertExpr : Int -> Typing.TExpr -> String
+convertExpr indentLevel (Typing.TExpr t expr) =
+    let
+        genIndent n =
+            String.repeat n " "
+    in
     case expr of
         Ast.Int i ->
             "(i32.const " ++ String.fromInt i ++ ")"
@@ -48,11 +47,14 @@ convertExpr expr =
             "(f32.const " ++ String.fromFloat f ++ ")"
 
         Ast.BinOp op x y ->
-            String.join ("\n" ++ indent)
-                [ convertExpr x
-                , convertExpr y
+            String.join ("\n" ++ genIndent indentLevel)
+                [ convertExpr indentLevel x
+                , convertExpr indentLevel y
                 , convertBinOp op
                 ]
+
+        Ast.Var name ->
+            Format.value "(get_local ${})" name
 
         _ ->
             ""
@@ -62,7 +64,7 @@ convert : Typing.TExpr -> String
 convert (Typing.TExpr type_ expr) =
     let
         watExpr =
-            convertExpr expr
+            convertExpr 8 expr
     in
     """(module
     (export "exported_main" (func $main))
