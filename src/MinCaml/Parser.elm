@@ -1,20 +1,21 @@
 module MinCaml.Parser exposing (parse)
 
 import Char
-import MinCaml.Ast as Ast
+import MinCaml.Syntax as Syntax
+import MinCaml.Type as Type
 import Parser exposing (..)
 import Result
 import Set
 
 
-number_ : Parser Ast.Expr
+number_ : Parser Syntax.Expr
 number_ =
     number
-        { int = Just Ast.Int
+        { int = Just Syntax.Int
         , binary = Nothing
         , octal = Nothing
         , hex = Nothing
-        , float = Just Ast.Float
+        , float = Just Syntax.Float
         }
 
 
@@ -27,9 +28,9 @@ var =
         }
 
 
-letIn : Parser Ast.Expr
+letIn : Parser Syntax.Expr
 letIn =
-    succeed Ast.LetIn
+    succeed (Syntax.LetIn Type.TUnit)
         |. keyword "let"
         |. spaces
         |= var
@@ -43,13 +44,13 @@ letIn =
         |= lazy (\_ -> additive)
 
 
-base : Parser Ast.Expr
+base : Parser Syntax.Expr
 base =
     oneOf
-        [ number_, map Ast.Var var, letIn ]
+        [ number_, map (Syntax.Var Type.TUnit) var, letIn ]
 
 
-factor : Parser Ast.Expr
+factor : Parser Syntax.Expr
 factor =
     oneOf
         [ succeed identity
@@ -63,32 +64,32 @@ factor =
         ]
 
 
-multiplicative : Parser Ast.Expr
+multiplicative : Parser Syntax.Expr
 multiplicative =
     oneOf
-        [ dotOp "*" Ast.Mul Ast.MulDot
-        , dotOp "/" Ast.Div Ast.DivDot
+        [ dotOp "*" Syntax.Mul Syntax.MulDot
+        , dotOp "/" Syntax.Div Syntax.DivDot
         ]
         |> chainl factor
 
 
-additive : Parser Ast.Expr
+additive : Parser Syntax.Expr
 additive =
     oneOf
-        [ dotOp "+" Ast.Add Ast.AddDot
-        , dotOp "-" Ast.Sub Ast.SubDot
+        [ dotOp "+" Syntax.Add Syntax.AddDot
+        , dotOp "-" Syntax.Sub Syntax.SubDot
         ]
         |> chainl multiplicative
 
 
 {-| clone of <https://hackage.haskell.org/package/parsec3-1.0.1.8/docs/src/Text-Parsec-Combinator.html#chainl1>
 -}
-chainl : Parser Ast.Expr -> Parser Ast.BinOp -> Parser Ast.Expr
+chainl : Parser Syntax.Expr -> Parser Syntax.BinOp -> Parser Syntax.Expr
 chainl baseParser opParser =
     let
         rest e =
             oneOf
-                [ succeed (\op e_ -> Ast.BinOp op e e_)
+                [ succeed (\op e_ -> Syntax.BinOp Type.TUnit op e e_)
                     |= opParser
                     |. spaces
                     |= baseParser
@@ -103,7 +104,7 @@ chainl baseParser opParser =
         |> andThen rest
 
 
-dotOp : String -> Ast.BinOp -> Ast.BinOp -> Parser Ast.BinOp
+dotOp : String -> Syntax.BinOp -> Syntax.BinOp -> Parser Syntax.BinOp
 dotOp s op dotOp_ =
     succeed identity
         |. symbol s
@@ -117,7 +118,7 @@ dotOp s op dotOp_ =
             )
 
 
-expr : Parser Ast.Expr
+expr : Parser Syntax.Expr
 expr =
     succeed identity
         |. spaces
@@ -126,7 +127,7 @@ expr =
         |. end
 
 
-parse : String -> Result String Ast.Expr
+parse : String -> Result String Syntax.Expr
 parse input =
     run expr input |> Result.mapError (String.join "\n" << List.map toString)
 

@@ -1,7 +1,8 @@
 module WatTest exposing (suite)
 
 import Expect
-import MinCaml.Ast as Ast
+import MinCaml.Syntax as Syntax
+import MinCaml.Type as Type
 import MinCaml.Wat exposing (convertExpr)
 import Test exposing (..)
 
@@ -10,12 +11,12 @@ suite : Test
 suite =
     describe "convertExpr test"
         [ test "int" <|
-            \_ -> Expect.equal "(i32.const 1)" <| convertExpr (Ast.Int 1)
+            \_ -> Expect.equal "(i32.const 1)" <| convertExpr 8 (Syntax.Int 1)
         , test "add" <|
             \_ ->
                 let
                     expr =
-                        Ast.BinOp Ast.Add (Ast.Int 1) (Ast.Int 2)
+                        Syntax.BinOp Type.TInt Syntax.Add (Syntax.Int 1) (Syntax.Int 2)
 
                     expected =
                         String.join ("\n" ++ String.repeat 8 " ")
@@ -24,5 +25,5 @@ suite =
                             , "(i32.add)"
                             ]
                 in
-                Expect.equal expected <| convertExpr expr
+                Expect.equal expected <| convertExpr 8 expr
         ]

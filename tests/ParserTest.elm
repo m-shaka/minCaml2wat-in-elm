@@ -1,8 +1,9 @@
 module ParserTest exposing (suite)
 
 import Expect
-import MinCaml.Ast as Ast
 import MinCaml.Parser exposing (parse)
+import MinCaml.Syntax as Syntax
+import MinCaml.Type as Type
 import Test exposing (..)
 
 
@@ -26,14 +27,16 @@ testBinOp =
                         "5 + 3 + 2"
 
                     expected =
-                        Ast.BinOp
-                            Ast.Add
-                            (Ast.BinOp
-                                Ast.Add
-                                (Ast.Int 5)
-                                (Ast.Int 3)
+                        Syntax.BinOp
+                            Type.TUnit
+                            Syntax.Add
+                            (Syntax.BinOp
+                                Type.TUnit
+                                Syntax.Add
+                                (Syntax.Int 5)
+                                (Syntax.Int 3)
                             )
-                            (Ast.Int 2)
+                            (Syntax.Int 2)
                 in
                 Expect.equal (Ok expected) (parse src)
         , test "mul assoc" <|
@@ -43,14 +46,16 @@ testBinOp =
                         "5 * 3 * 2"
 
                     expected =
-                        Ast.BinOp
-                            Ast.Mul
-                            (Ast.BinOp
-                                Ast.Mul
-                                (Ast.Int 5)
-                                (Ast.Int 3)
+                        Syntax.BinOp
+                            Type.TUnit
+                            Syntax.Mul
+                            (Syntax.BinOp
+                                Type.TUnit
+                                Syntax.Mul
+                                (Syntax.Int 5)
+                                (Syntax.Int 3)
                             )
-                            (Ast.Int 2)
+                            (Syntax.Int 2)
                 in
                 Expect.equal (Ok expected) (parse src)
         , test "both (additive first)" <|
@@ -60,17 +65,20 @@ testBinOp =
                         "5 + 3 * 2 / 2"
 
                     expected =
-                        Ast.BinOp
-                            Ast.Add
-                            (Ast.Int 5)
-                            (Ast.BinOp
-                                Ast.Div
-                                (Ast.BinOp
-                                    Ast.Mul
-                                    (Ast.Int 3)
-                                    (Ast.Int 2)
+                        Syntax.BinOp
+                            Type.TUnit
+                            Syntax.Add
+                            (Syntax.Int 5)
+                            (Syntax.BinOp
+                                Type.TUnit
+                                Syntax.Div
+                                (Syntax.BinOp
+                                    Type.TUnit
+                                    Syntax.Mul
+                                    (Syntax.Int 3)
+                                    (Syntax.Int 2)
                                 )
-                                (Ast.Int 2)
+                                (Syntax.Int 2)
                             )
                 in
                 Expect.equal (Ok expected) (parse src)
@@ -81,14 +89,16 @@ testBinOp =
                         "5 * 3 + 2"
 
                     expected =
-                        Ast.BinOp
-                            Ast.Add
-                            (Ast.BinOp
-                                Ast.Mul
-                                (Ast.Int 5)
-                                (Ast.Int 3)
+                        Syntax.BinOp
+                            Type.TUnit
+                            Syntax.Add
+                            (Syntax.BinOp
+                                Type.TUnit
+                                Syntax.Mul
+                                (Syntax.Int 5)
+                                (Syntax.Int 3)
                             )
-                            (Ast.Int 2)
+                            (Syntax.Int 2)
                 in
                 Expect.equal (Ok expected) (parse src)
         ]
@@ -104,17 +114,20 @@ testBinOpDot =
                         "5. +. 3. *. 2. /. 2."
 
                     expected =
-                        Ast.BinOp
-                            Ast.AddDot
-                            (Ast.Float 5.0)
-                            (Ast.BinOp
-                                Ast.DivDot
-                                (Ast.BinOp
-                                    Ast.MulDot
-                                    (Ast.Float 3.0)
-                                    (Ast.Float 2.0)
+                        Syntax.BinOp
+                            Type.TUnit
+                            Syntax.AddDot
+                            (Syntax.Float 5.0)
+                            (Syntax.BinOp
+                                Type.TUnit
+                                Syntax.DivDot
+                                (Syntax.BinOp
+                                    Type.TUnit
+                                    Syntax.MulDot
+                                    (Syntax.Float 3.0)
+                                    (Syntax.Float 2.0)
                                 )
-                                (Ast.Float 2.0)
+                                (Syntax.Float 2.0)
                             )
                 in
                 Expect.equal (Ok expected) (parse src)
@@ -125,14 +138,16 @@ testBinOpDot =
                         "5. *. 3. +. 2."
 
                     expected =
-                        Ast.BinOp
-                            Ast.AddDot
-                            (Ast.BinOp
-                                Ast.MulDot
-                                (Ast.Float 5.0)
-                                (Ast.Float 3.0)
+                        Syntax.BinOp
+                            Type.TUnit
+                            Syntax.AddDot
+                            (Syntax.BinOp
+                                Type.TUnit
+                                Syntax.MulDot
+                                (Syntax.Float 5.0)
+                                (Syntax.Float 3.0)
                             )
-                            (Ast.Float 2.0)
+                            (Syntax.Float 2.0)
                 in
                 Expect.equal (Ok expected) (parse src)
         ]
@@ -143,16 +158,16 @@ testVar =
     describe "Var"
         [ test "simple alpha" <|
             \_ ->
-                Expect.equal (Ok (Ast.Var "a")) (parse "a")
+                Expect.equal (Ok (Syntax.Var Type.TUnit "a")) (parse "a")
         , test "start from _" <|
             \_ ->
-                Expect.equal (Ok (Ast.Var "_a")) (parse "_a")
+                Expect.equal (Ok (Syntax.Var Type.TUnit "_a")) (parse "_a")
         , test "contains number" <|
             \_ ->
-                Expect.equal (Ok (Ast.Var "_1a3b")) (parse "_1a3b")
+                Expect.equal (Ok (Syntax.Var Type.TUnit "_1a3b")) (parse "_1a3b")
         , test "contains '" <|
             \_ ->
-                Expect.equal (Ok (Ast.Var "_a'")) (parse "_a'")
+                Expect.equal (Ok (Syntax.Var Type.TUnit "_a'")) (parse "_a'")
         , test "start from capital" <|
             \_ ->
                 Expect.err (parse "Abc")
@@ -163,7 +178,11 @@ testVar =
                         "a + b"
 
                     expected =
-                        Ast.BinOp Ast.Add (Ast.Var "a") (Ast.Var "b")
+                        Syntax.BinOp
+                            Type.TUnit
+                            Syntax.Add
+                            (Syntax.Var Type.TUnit "a")
+                            (Syntax.Var Type.TUnit "b")
                 in
                 Expect.equal (Ok expected) (parse src)
         ]
@@ -179,7 +198,11 @@ testLetIn =
                         "let a = 3 in a"
 
                     expected =
-                        Ast.LetIn "a" (Ast.Int 3) (Ast.Var "a")
+                        Syntax.LetIn
+                            Type.TUnit
+                            "a"
+                            (Syntax.Int 3)
+                            (Syntax.Var Type.TUnit "a")
                 in
                 Expect.equal (Ok expected) (parse src)
         , test "nested" <|
@@ -189,11 +212,20 @@ testLetIn =
                         "let a = 3 in let b = 5 in a + b"
 
                     expected =
-                        Ast.LetIn "a"
-                            (Ast.Int 3)
-                            (Ast.LetIn "b"
-                                (Ast.Int 5)
-                                (Ast.BinOp Ast.Add (Ast.Var "a") (Ast.Var "b"))
+                        Syntax.LetIn
+                            Type.TUnit
+                            "a"
+                            (Syntax.Int 3)
+                            (Syntax.LetIn
+                                Type.TUnit
+                                "b"
+                                (Syntax.Int 5)
+                                (Syntax.BinOp
+                                    Type.TUnit
+                                    Syntax.Add
+                                    (Syntax.Var Type.TUnit "a")
+                                    (Syntax.Var Type.TUnit "b")
+                                )
                             )
                 in
                 Expect.equal (Ok expected) (parse src)
@@ -204,9 +236,16 @@ testLetIn =
                         "let a = 3.1 +. b in a"
 
                     expected =
-                        Ast.LetIn "a"
-                            (Ast.BinOp Ast.AddDot (Ast.Float 3.1) (Ast.Var "b"))
-                            (Ast.Var "a")
+                        Syntax.LetIn
+                            Type.TUnit
+                            "a"
+                            (Syntax.BinOp
+                                Type.TUnit
+                                Syntax.AddDot
+                                (Syntax.Float 3.1)
+                                (Syntax.Var Type.TUnit "b")
+                            )
+                            (Syntax.Var Type.TUnit "a")
                 in
                 Expect.equal (Ok expected) (parse src)
         ]

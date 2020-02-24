@@ -1,70 +1,73 @@
 module MinCaml.Wat exposing (convert, convertExpr)
 
-import MinCaml.Ast as Ast
+import MinCaml.Syntax as Syntax
 import MinCaml.Typing as Typing
 import String.Format as Format
 
 
-convertBinOp : Ast.BinOp -> String
+convertBinOp : Syntax.BinOp -> String
 convertBinOp op =
     case op of
-        Ast.Add ->
+        Syntax.Add ->
             "(i32.add)"
 
-        Ast.Sub ->
+        Syntax.Sub ->
             "(i32.sub)"
 
-        Ast.Mul ->
+        Syntax.Mul ->
             "(i32.mul)"
 
-        Ast.Div ->
+        Syntax.Div ->
             "(i32.div_s)"
 
-        Ast.AddDot ->
+        Syntax.AddDot ->
             "(f32.add)"
 
-        Ast.SubDot ->
+        Syntax.SubDot ->
             "(f32.sub)"
 
-        Ast.MulDot ->
+        Syntax.MulDot ->
             "(f32.mul)"
 
-        Ast.DivDot ->
+        Syntax.DivDot ->
             "(f32.div)"
 
 
-convertExpr : Int -> Typing.TExpr -> String
-convertExpr indentLevel (Typing.TExpr t expr) =
+convertExpr : Int -> Syntax.Expr -> String
+convertExpr indentLevel expr =
     let
         genIndent n =
             String.repeat n " "
     in
     case expr of
-        Ast.Int i ->
+        Syntax.Int i ->
             "(i32.const " ++ String.fromInt i ++ ")"
 
-        Ast.Float f ->
+        Syntax.Float f ->
             "(f32.const " ++ String.fromFloat f ++ ")"
 
-        Ast.BinOp op x y ->
+        Syntax.BinOp _ op x y ->
             String.join ("\n" ++ genIndent indentLevel)
                 [ convertExpr indentLevel x
                 , convertExpr indentLevel y
                 , convertBinOp op
                 ]
 
-        Ast.Var name ->
+        Syntax.Var _ name ->
             Format.value "(get_local ${})" name
 
         _ ->
             ""
 
 
-convert : Typing.TExpr -> String
-convert (Typing.TExpr type_ expr) =
+convert : Syntax.Expr -> String
+convert expr =
     let
         watExpr =
             convertExpr 8 expr
+
+        type_ =
+            Syntax.extractType expr
     in
     """(module
     (export "exported_main" (func $main))

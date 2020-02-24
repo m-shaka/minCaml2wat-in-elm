@@ -1,17 +1,8 @@
 module MinCaml.Typing exposing (..)
 
 import Dict
-import MinCaml.Ast as Ast
-
-
-type TExpr
-    = TExpr Type Ast.Expr
-
-
-type Type
-    = TInt
-    | TFloat
-    | TUnit
+import MinCaml.Syntax as Syntax exposing (Expr(..))
+import MinCaml.Type exposing (Type(..))
 
 
 type alias Env =
@@ -21,25 +12,25 @@ type alias Env =
 unify : Type -> Type -> Result String Type
 unify t1 t2 =
     if t1 == t2 then
-        Ok TUnit
+        Ok t1
 
     else
         Err "unification error"
 
 
-inferExpr : Env -> Ast.Expr -> Result String Type
+inferExpr : Env -> Syntax.Expr -> Result String Type
 inferExpr env expr =
     case expr of
-        Ast.Int _ ->
+        Int _ ->
             Ok TInt
 
-        Ast.Float _ ->
+        Float _ ->
             Ok TFloat
 
-        Ast.BinOp op e1 e2 ->
+        BinOp _ op e1 e2 ->
             let
                 expected =
-                    if Ast.isIntOp op then
+                    if Syntax.isIntOp op then
                         TInt
 
                     else
@@ -51,15 +42,11 @@ inferExpr env expr =
                 |> Result.andThen (unify expected)
                 |> Result.map (\_ -> expected)
 
-        Ast.Var name ->
-            case Dict.get name env of
-                Just t ->
-                    Ok t
+        Var _ name ->
+            Dict.get name env
+                |> Result.fromMaybe "undefined variable"
 
-                Nothing ->
-                    Err "undefined variable"
-
-        Ast.LetIn name e1 e2 ->
+        LetIn _ name e1 e2 ->
             inferExpr env e1
                 |> Result.andThen
                     (\t ->
@@ -67,9 +54,28 @@ inferExpr env expr =
                     )
 
 
-typing : Ast.Expr -> Result String TExpr
+typing : Syntax.Expr -> Result String Expr
 typing expr =
-    inferExpr Dict.empty expr |> Result.map (\t -> TExpr t expr)
+    let
+        addType t =
+            case expr of
+                Syntax.Int i ->
+                    Int i
+
+                Syntax.Float f ->
+                    Float f
+
+                BinOp _ op e1 e2 ->
+                    BinOp t op e1 e2
+
+                Var _ name ->
+                    Var t name
+
+                LetIn _ name e1 e2 ->
+                    LetIn t name e1 e2
+    in
+    inferExpr Dict.empty expr
+        |> Result.map addType
 
 
 show : Type -> String
